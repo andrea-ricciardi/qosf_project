@@ -40,8 +40,6 @@ qiskit-aqua==0.9.0
 qiskit-ibmq-provider==0.12.2
 qiskit-ignis==0.6.0
 qiskit-terra==0.17.0
-Quandl==3.6.0
-qunetsim==0.1.2
 requests==2.25.1
 requests-ntlm==1.1.0
 retworkx==0.8.0
