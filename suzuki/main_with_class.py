@@ -10,7 +10,18 @@ from qiskit.algorithms.amplitude_estimators import EstimationProblem
 
 nbit = 3
 b_max = math.pi / 5 # upper limit of integral
-num_circuits = 6 # M in Suzuki. Q^0, Q^1, ... Q^(M-1)
+method = 'suzuki' # suzuki or power_law
+
+if method == 'suzuki':
+    evaluation_schedule = 7 # M in Suzuki. Q^0, Q^1, ... Q^(M-1)
+elif method == 'power_law':
+    # Power law:
+    eps_precision = 0.01
+    beta = 0.455
+    max_k = max(int(1/eps_precision ** (2*beta)), int(math.log(1/eps_precision)))
+    evaluation_schedule = [int(k ** ((1-beta)/(2*beta))) for k in range(1, max_k + 1)]
+else:
+    raise SystemExit('')
 
 
 # state_preparation: P R in Fig (6) Suzuki
@@ -46,7 +57,7 @@ grover_op.barrier() # format the circuits visualization
 operators.R(grover_op, qx, qx_measure, nbit, b_max)
 
 qae = MaximumLikelihoodAmplitudeEstimation(
-    evaluation_schedule=num_circuits,
+    evaluation_schedule=evaluation_schedule,
     quantum_instance=Aer.get_backend('qasm_simulator')
     )
 problem = EstimationProblem(
