@@ -23,20 +23,26 @@ def main():
             
     backend = Aer.get_backend('qasm_simulator')
     
+    # Creates the circuit in Fig 6 of Suzuki paper
     qc_list = grover.create_grover_circuit(number_grover_list, nbit, b_max)
     
+    # Run the circuit and returns list of count of observing "1" for qc_list
     hit_list = grover.run_grover(qc_list, number_grover_list, shots_list, backend)
     
+    # Returns a list of len(number_grover_list) with all the values of theta
     thetaCandidate_list = postprocessing.calculate_theta(
         hit_list, number_grover_list, shots_list
         )
     
+    # Returns the result of equation (23) in Suzuki
     discretizedResult = approximate_integral(nbit, b_max)
     
     # Plot to find the correlation between the number of oracle calls and the
     # approximation error of theta_a, as well as the lower bound of such error
     # provided by the Cramer-Rao
-    error_list = np.abs(np.sin(thetaCandidate_list)**2 - discretizedResult)  # list of estimation errors
+    
+    # list of estimation errors
+    error_list = np.abs(np.sin(thetaCandidate_list)**2 - discretizedResult)
     OracleCall_list = [] # list of Cramer-Rao lower bound
     ErrorCramerRao_list = [] # list of Cramer-Rao lower bound
     for i in range(len(number_grover_list)):

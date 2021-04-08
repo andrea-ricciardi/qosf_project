@@ -5,14 +5,15 @@ import math
 import operators
 from qiskit import Aer
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
-from qiskit.aqua.algorithms import MaximumLikelihoodAmplitudeEstimation
+from qiskit.algorithms import MaximumLikelihoodAmplitudeEstimation
+from qiskit.algorithms.amplitude_estimators import EstimationProblem
 
 nbit = 3
 b_max = math.pi / 5 # upper limit of integral
-num_circuits = 6
+num_circuits = 6 # M in Suzuki. Q^0, Q^1, ... Q^(M-1)
 
 
-# state_preparation
+# state_preparation: P R in Fig (6) Suzuki
 qx = QuantumRegister(nbit)
 qx_measure = QuantumRegister(1)
 cr = ClassicalRegister(1)
@@ -25,7 +26,7 @@ else:
 operators.P(state_preparation, qx, nbit)
 operators.R(state_preparation, qx, qx_measure, nbit, b_max)
 
-# grover_operator
+# grover_operator: Q operator. Everything after P R in Fig (6) Suzuki
 qx = QuantumRegister(nbit)
 qx_measure = QuantumRegister(1)
 cr = ClassicalRegister(1)
@@ -45,14 +46,14 @@ grover_op.barrier() # format the circuits visualization
 operators.R(grover_op, qx, qx_measure, nbit, b_max)
 
 qae = MaximumLikelihoodAmplitudeEstimation(
-    num_oracle_circuits=num_circuits + 1,
+    evaluation_schedule=num_circuits,
+    quantum_instance=Aer.get_backend('qasm_simulator')
+    )
+problem = EstimationProblem(
     state_preparation=state_preparation,
+    objective_qubits=[nbit+1],
     grover_operator=grover_op
     )
 
-qae.set_backend(Aer.get_backend('qasm_simulator'))
-qae.construct_circuits(measurement=True)
-qae.run()
-
-
+result = qae.estimate(problem)
 

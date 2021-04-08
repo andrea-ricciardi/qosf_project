@@ -30,21 +30,28 @@ def calculate_theta(hit_list, number_grover_list, shots_list):
     rangeMax = 1.0 - small
     for igrover in range(len(number_grover_list)):
 
+        # p is the alpha: sin^2(theta) = alpha
+        # sum(k=0 .. M) (ln (L_k(h_k, theta_a)))
         def loglikelihood(p):
             ret = np.zeros_like(p)
             theta = np.arcsin(np.sqrt(p))
             for n in range(igrover + 1):
                 ihit = hit_list[n]
+                # 2m_k + 1 * theta_a
                 arg = (2 * number_grover_list[n] + 1) * theta
                 ret = ret + 2 * ihit * np.log(np.abs(np.sin(arg))) + 2 * (
                     shots_list[n] - ihit) * np.log(np.abs(np.cos(arg)))
             return -ret
 
         searchRange = (rangeMin, rangeMax)
+        # searchResult is array([alpha_value])
         searchResult = optimize.brute(loglikelihood, [searchRange])
         pCandidate = searchResult[0]
+        # Get theta from alpha
         thetaCandidate_list.append(np.arcsin(np.sqrt(pCandidate)))
+        # CramerRao is 1/sqrt(Fisher_information(alpha))
         perror = CalcErrorCramerRao(igrover, shots_list, pCandidate, number_grover_list)
+        # Restrict the range to [alpha-confidence*perror, alpha+confidence*perror]
         rangeMax = min(pCandidate+confidenceLevel*perror,1.0 - small)
         rangeMin = max(pCandidate-confidenceLevel*perror,0.0 + small)
     return thetaCandidate_list
@@ -60,7 +67,7 @@ def CalcErrorCramerRao(M, shots_list, p0, number_grover_list):
     shots_list : list of int
         List of number of shots.
     p0 : float
-        The true parameter value to be estimated.
+        The true parameter value to be estimated. (alpha)
     number_grover_list : list of int
         List of number of Grover operators.
 
@@ -75,6 +82,7 @@ def CalcErrorCramerRao(M, shots_list, p0, number_grover_list):
     for k in range(M + 1):
         Nk = shots_list[k]
         mk = number_grover_list[k]
+        # Equation (12) in Suzuki
         FisherInfo += Nk / (p0 * (1 - p0)) * (2 * mk + 1)**2
     return np.sqrt(1 / FisherInfo)
     
