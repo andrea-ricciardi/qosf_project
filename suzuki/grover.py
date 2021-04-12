@@ -1,11 +1,27 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import itertools
+import multiprocessing as mp
 import operators
 from qiskit import ClassicalRegister, QuantumRegister, QuantumCircuit
 from qiskit import execute
+from qiskit.tools.parallel import parallel_map
 import time
 
-def run_grover(qc_list, number_grover_list, shots_list, backend):
+def run_single_grover(qc_shots_backend):
+    job = execute(qc_shots_backend[0], backend=qc_shots_backend[2], shots=qc_shots_backend[1])
+    interval = 0.00001
+    time.sleep(interval)
+    while job.status().name != 'DONE':
+        # Gets stuck here
+        time.sleep(interval)
+    counts = job.result().get_counts(qc_shots_backend[0]).get("1", 0)
+    return counts
+
+def run_grover(
+        qc_list, number_grover_list, shots_list, backend, max_qpus, 
+        parallel_method, parallel=False
+    ):
     """
     Run the quantum circuits returned by create_grover_circuit()
 
@@ -24,18 +40,22 @@ def run_grover(qc_list, number_grover_list, shots_list, backend):
     hit_list: list of int
         List of count of observing "1" for qc_list
 
-    """
-    hit_list = []
-    for k in range(len(number_grover_list)):
-        job = execute(qc_list[k], backend=backend, shots=shots_list[k])
-        lapse = 0
-        interval = 0.00001
-        time.sleep(interval)
-        while job.status().name != 'DONE':
-            time.sleep(interval)
-            lapse += 1
-        counts = job.result().get_counts(qc_list[k]).get("1", 0)
-        hit_list.append(counts)
+    """        
+    qc_shots_backend_list = list(zip(qc_list, shots_list, [backend for _ in qc_list]))
+    if parallel:
+        if parallel_method == 'mp':
+            print("Parallelization: multiprocessing")
+            with mp.Pool(processes=max_qpus) as pool:
+                hit_list = pool.map(run_single_grover, qc_shots_backend_list)
+        elif parallel_method == 'parallel_map':
+            print("Parallelization: parallel_map")
+            hit_list = parallel_map(run_single_grover, qc_shots_backend_list, 
+                                    num_processes=max_qpus)
+        else:
+            raise ValueError("Parallel_method {} not recognized".format(parallel_method))
+        
+    else:
+        hit_list = [run_single_grover(qc_shots_backend) for qc_shots_backend in qc_shots_backend_list]
     return hit_list
 
 def create_grover_circuit(number_grover_list, nbit, b_max):

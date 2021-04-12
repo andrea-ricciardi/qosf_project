@@ -10,6 +10,8 @@ import sys
 
 
 def main():
+    max_qpus = 2
+    parallel_method = 'parallel_map' # mp (multiprocessing) or parallel_map (qiskit parallel_map)
     nbit = 3
     b_max = math.pi / 5 # upper limit of integral
     shots_list = [100, 100, 100, 100, 100, 100, 100]
@@ -27,7 +29,10 @@ def main():
     qc_list = grover.create_grover_circuit(number_grover_list, nbit, b_max)
     
     # Run the circuit and returns list of count of observing "1" for qc_list
-    hit_list = grover.run_grover(qc_list, number_grover_list, shots_list, backend)
+    hit_list = grover.run_grover(
+        qc_list, number_grover_list, shots_list, backend, max_qpus, 
+        parallel_method, parallel=True
+    )
     
     # Returns a list of len(number_grover_list) with all the values of theta
     thetaCandidate_list = postprocessing.calculate_theta(
@@ -64,28 +69,28 @@ def main():
     
     # Repeat the above algorithm n_trial = 100 times to estimate the
     # statistical mean of errors.
-    n_trial = 100
-    error_list = np.zeros_like(number_grover_list, dtype=float)
-    qc_list = grover.create_grover_circuit(number_grover_list, nbit, b_max)
-    for i in range(n_trial):
-        sys.stdout.write("n_trial=(%d/%d)\r" % ((i + 1), n_trial))
-        sys.stdout.flush()
-        hit_list = grover.run_grover(
-            qc_list, number_grover_list, shots_list, backend)
-        thetaCandidate_list = postprocessing.calculate_theta(
-            hit_list, number_grover_list, shots_list)
-        error_list += (np.sin(thetaCandidate_list)**2 - discretizedResult)**2  # list of estimation errors
+    # n_trial = 100
+    # error_list = np.zeros_like(number_grover_list, dtype=float)
+    # qc_list = grover.create_grover_circuit(number_grover_list, nbit, b_max)
+    # for i in range(n_trial):
+    #     sys.stdout.write("n_trial=(%d/%d)\r" % ((i + 1), n_trial))
+    #     sys.stdout.flush()
+    #     hit_list = grover.run_grover(
+    #         qc_list, number_grover_list, shots_list, backend)
+    #     thetaCandidate_list = postprocessing.calculate_theta(
+    #         hit_list, number_grover_list, shots_list)
+    #     error_list += (np.sin(thetaCandidate_list)**2 - discretizedResult)**2  # list of estimation errors
     
-    error_list = (error_list / (n_trial-1))**(1/2)
+    # error_list = (error_list / (n_trial-1))**(1/2)
     
-    p1 = plt.plot(OracleCall_list, error_list, 'o')
-    p2 = plt.plot(OracleCall_list, ErrorCramerRao_list)
-    plt.xscale('log')
-    plt.xlabel("Number of oracle calls")
-    plt.yscale('log')
-    plt.ylabel("Estimation Error")
-    plt.legend((p1[0], p2[0]), ("Estimated Value", "Cramér-Rao"))
-    plt.show()
+    # p1 = plt.plot(OracleCall_list, error_list, 'o')
+    # p2 = plt.plot(OracleCall_list, ErrorCramerRao_list)
+    # plt.xscale('log')
+    # plt.xlabel("Number of oracle calls")
+    # plt.yscale('log')
+    # plt.ylabel("Estimation Error")
+    # plt.legend((p1[0], p2[0]), ("Estimated Value", "Cramér-Rao"))
+    # plt.show()
 
 
 def approximate_integral(nbit, b_max):
