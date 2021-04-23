@@ -20,7 +20,7 @@ def run_single_grover(qc_shots_backend):
 
 def run_grover(
         qc_list, number_grover_list, shots_list, backend, max_qpus, 
-        parallel_method, parallel=False
+        parallel_method, parallel=False, schedule={}
     ):
     """
     Run the quantum circuits returned by create_grover_circuit()

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+from collections.abc import Iterable
 import grover
 import math
 import matplotlib.pyplot as plt
@@ -7,21 +8,38 @@ import numpy as np
 import postprocessing
 from qiskit import Aer
 import sys
+import greedy_ansatz
 
 
 def main():
-    max_qpus = 2
-    parallel_method = 'parallel_map' # mp (multiprocessing) or parallel_map (qiskit parallel_map)
     nbit = 3
+    num_qpus = 3
+    
+    qpu_sizes = [15] * num_qpus
+    
+    ansatz_size = 5 # TODO number of qubits needed to query the oracle.
+
+    parallel_method = 'parallel_map' # mp (multiprocessing) or parallel_map (qiskit parallel_map)
+
     b_max = math.pi / 5 # upper limit of integral
     shots_list = [100, 100, 100, 100, 100, 100, 100]
     number_grover_list = [0, 1, 2, 4, 8, 16, 32]
+    
+    num_paulis = len(number_grover_list)
     
     if len(shots_list) != len(number_grover_list):
         raise Exception(
             'The length of shots_list should be equal to the length of \
             number_grover_list'
         )
+            
+    # The sum of the lengths of the lists == num circuits 
+    schedule = greedy_ansatz.greedy_distribution(
+        qpu_sizes, ansatz_size, num_paulis, allow_distributed=False
+    )
+            
+    # if not isinstance(nbit, Iterable):
+    #     nbit = [nbit for _ in range(num_qpus)]
             
     backend = Aer.get_backend('qasm_simulator')
     
@@ -30,7 +48,7 @@ def main():
     
     # Run the circuit and returns list of count of observing "1" for qc_list
     hit_list = grover.run_grover(
-        qc_list, number_grover_list, shots_list, backend, max_qpus, 
+        qc_list, number_grover_list, shots_list, backend, num_qpus, 
         parallel_method, parallel=True
     )
     
