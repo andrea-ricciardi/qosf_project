@@ -15,11 +15,11 @@ def main():
     nbit = 3
     num_qpus = 3
     
-    qpu_sizes = [15] * num_qpus
+    qpu_sizes = [10] * num_qpus
     
-    ansatz_size = 5 # TODO number of qubits needed to query the oracle.
+    ansatz_size = 2 * nbit - 1 # number of qubits needed to query the oracle
 
-    parallel_method = 'parallel_map' # mp (multiprocessing) or parallel_map (qiskit parallel_map)
+    parallel_method = 'schedule' # mp (multiprocessing), parallel_map (qiskit parallel_map) or schedule
 
     b_max = math.pi / 5 # upper limit of integral
     shots_list = [100, 100, 100, 100, 100, 100, 100]
@@ -49,7 +49,7 @@ def main():
     # Run the circuit and returns list of count of observing "1" for qc_list
     hit_list = grover.run_grover(
         qc_list, number_grover_list, shots_list, backend, num_qpus, 
-        parallel_method, parallel=True
+        parallel_method, parallel=True, schedule=schedule
     )
     
     # Returns a list of len(number_grover_list) with all the values of theta

@@ -43,7 +43,17 @@ def run_grover(
     """        
     qc_shots_backend_list = list(zip(qc_list, shots_list, [backend for _ in qc_list]))
     if parallel:
-        if parallel_method == 'mp':
+        if parallel_method == 'schedule':
+            print("Parallelization: schedule")
+            hit_list = []
+            for round in schedule:
+                num_processes = len(schedule[round])
+                hit_list = hit_list + parallel_map(run_single_grover, 
+                                                   qc_shots_backend_list[:num_processes],
+                                                   num_processes=num_processes)
+                qc_shots_backend_list = qc_shots_backend_list[num_processes:]
+                    
+        elif parallel_method == 'mp':
             print("Parallelization: multiprocessing")
             with mp.Pool(processes=max_qpus) as pool:
                 hit_list = pool.map(run_single_grover, qc_shots_backend_list)
