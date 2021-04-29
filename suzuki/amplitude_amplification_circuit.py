@@ -57,8 +57,6 @@ class AmplitudeAmplificationMonteCarloCircuit:
             qc.measure(qx_measure[0], cr[0])
             self.circuits.append(qc)
             
-    # TODO why it doesn't accept Type[Schedule] as type hint?
-    # Something doesn't seem to work with inheritance
     def run_in_parallel(self, parallel_schedule: GreedySchedule) -> None:
         """
         Run in parallel the quantum circuits built by create_circuit.
@@ -66,12 +64,12 @@ class AmplitudeAmplificationMonteCarloCircuit:
 
         Parameters
         ----------
-        parallel_schedule : Type[Schedule]
-            Distribution schedule of Schedule'Class.
+        parallel_schedule : GreedySchedule
+            Distribution schedule.
 
         """
         self.__hit_list = []
-        schedule = parallel_schedule.schedule
+        schedule = parallel_schedule.schedule.copy()
         qc_shots = list(zip(self.circuits, self.algo_inputs.shots_list))
         for round in schedule:
             num_processes = len(schedule[round])

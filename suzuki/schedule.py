@@ -29,7 +29,7 @@ class Schedule:
         self.algo_inputs = algo_inputs
         self.hardware_inputs = hardware_inputs
         self.allow_distributed = allow_distributed
-        self.__schedule: Dict[int, List[Tuple[int, List]]] = {}
+        self._schedule: Dict[int, List[Tuple[int, List]]] = {}
         
     @abc.abstractmethod
     def make_schedule(self) -> None:
@@ -40,7 +40,7 @@ class Schedule:
     
     @property
     def schedule(self) -> Dict[int, List[Tuple[int, List[int]]]]:
-        return self.__schedule
+        return self._schedule
     
 class GreedySchedule(Schedule):
     """    
@@ -51,22 +51,6 @@ class GreedySchedule(Schedule):
     to the next round.
     
     """
-    
-    # TODO why if I remove __init__ the program raises an error?
-    # It should inherit from base class
-    def __init__(self, algo_inputs: QAEAlgoInputs, 
-                 hardware_inputs: HardwareInputs, 
-                 allow_distributed: bool) -> None:
-        self.algo_inputs = algo_inputs
-        self.hardware_inputs = hardware_inputs
-        self.allow_distributed = allow_distributed
-        self.__schedule: Dict[int, List[Tuple[int, List]]] = {}
-    
-    # TODO why if I remove schedule, the program raises an error?
-    # It should inherit from base class
-    @property
-    def schedule(self) -> Dict[int, List[Tuple[int, List[int]]]]:
-        return self.__schedule
     
     def make_schedule(self) -> None:
         """
@@ -87,7 +71,7 @@ class GreedySchedule(Schedule):
         qpus = self.hardware_inputs.qubits_per_qpu
         
         modified_qpus = [[bits, i] for i, bits in enumerate(qpus)]
-        self.__schedule[round] = []
+        self._schedule[round] = []
         couldNotFit = 0
         
         for i in range(num_paulis):
@@ -117,7 +101,7 @@ class GreedySchedule(Schedule):
                     break
                 
             modified_qpus = [bits_idx for bits_idx in modified_qpus if bits_idx[0] != 0]
-            self.__schedule[round].append((i, distribution))
+            self._schedule[round].append((i, distribution))
         
         self.__make_schedule(couldNotFit, round+1)
     
