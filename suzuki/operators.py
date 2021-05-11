@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import abc
-from qiskit import QuantumRegister, QuantumCircuit
-from typing import Dict
+from qiskit import ClassicalRegister, QuantumRegister, QuantumCircuit
+from typing import Dict, Tuple
 
 class UnitaryOperator:
     """
@@ -27,7 +27,7 @@ class UnitaryOperator:
         """
         Generating uniform probability distribution.
         The inverse of P is P.
-            
+        
         """
         qc.h(qx)
         
@@ -36,6 +36,7 @@ class UnitaryOperator:
                 qx_measure: QuantumRegister) -> None:
         """
         Apply R to qc
+        
         """
         return
     
@@ -44,6 +45,7 @@ class UnitaryOperator:
                    qx_measure: QuantumRegister) -> None:
         """
         Apply the inverse of R to qc
+        
         """
         return
     
@@ -86,8 +88,58 @@ class UnitaryOperator:
             for i in range(self.n_qubits - 3)[::-1]:
                 qc.ccx(qx[i + 2], qx_ancilla[i], qx_ancilla[i + 1])
             qc.ccx(qx[0], qx[1], qx_ancilla[0])
+            
+    def _prepare_circuit(self) -> Tuple[QuantumCircuit, QuantumRegister, 
+                                        QuantumRegister, QuantumRegister]:
+        qx = QuantumRegister(self.n_qubits)
+        qx_measure = QuantumRegister(1)
+        cr = ClassicalRegister(1)
+        if self.n_qubits > 2:
+            qx_ancilla = QuantumRegister(self.n_qubits - 2)
+            qc = QuantumCircuit(qx, qx_ancilla, qx_measure, cr)
+        else:
+            qx_ancilla = 0
+            qc = QuantumCircuit(qx, qx_measure, cr)
+        return qc, qx, qx_measure, qx_ancilla
         
+    def prepare_state(self) -> QuantumCircuit:
+        """
+        Prepare the quantum state by applying the operators P and R.
+        See P and R in Fig (6) in Suzuki for references.
 
+        Returns
+        -------
+        QuantumCircuit
+            Prepared state.
+
+        """
+        state, qx, qx_measure, _ = self._prepare_circuit()
+        self.apply_P(state, qx)
+        self.apply_R(state, qx, qx_measure)
+        return state
+    
+    def make_grover(self) -> QuantumCircuit:
+        """
+        Make the Q Grover operator.
+        See everything after P and R in Fig (6) in Suzuki for references.
+
+        Returns
+        -------
+        QuantumCircuit
+            Grover operator.
+
+        """
+        grover, qx, qx_measure, qx_ancilla = self._prepare_circuit()
+        grover.z(qx_measure[0])
+        self.apply_Rinv(grover, qx, qx_measure)
+        grover.barrier()
+        self.apply_P(grover, qx)
+        self.apply_reflection(grover, qx, qx_measure, qx_ancilla)
+        self.apply_P(grover, qx)
+        grover.barrier()
+        self.apply_R(grover, qx, qx_measure)
+        return grover
+        
 class SineSquaredOperator(UnitaryOperator):
     """
     Represents the A operator for the problem of computing the integral
@@ -120,4 +172,3 @@ class SineSquaredOperator(UnitaryOperator):
             qc.cu3(-2**i * self.param['upper_limit'] / 2**self.n_qubits * 2, 
                    0, 0, qx[i], qx_measure[0])
         qc.ry(-self.param['upper_limit'] / 2**self.n_qubits * 2 * 0.5, qx_measure)
-
