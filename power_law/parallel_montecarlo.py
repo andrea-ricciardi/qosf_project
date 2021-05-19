@@ -32,7 +32,7 @@ def main() -> None:
     # (1) Inputs #
     ##############
     """ Start Inputs """
-    n_qubits_algo = 3 # number of qubits needed by the algorithm
+    n_qubits_algo = 4 # number of qubits needed to run the circuit
     qubits_per_qpu = [10, 10, 10]
     problem = 'sine_squared' # 'sine_squared' for computing the integral of (sin(x))^2
     evaluation_schedule = None # power_law_schedule() for power law, None for Suzuki
@@ -51,10 +51,9 @@ def main() -> None:
     # Other approaches are possible, even though not implemented, such as constraint programming.
     greedy_schedule = GreedySchedule(inputs.algo, inputs.hardware, False)
     greedy_schedule.make_schedule()
-    # TODO greedy schedule figure it out
     # greedy_schedule.schedule is a dictionary having:
     # - rounds as keys
-    # - list of tuples ()
+    # - list of tuples (circuit_id, [qubits_qpu1, .., qubits_qpuN])
     
     ##########################################
     # (3) Set up the parallel MLAE algorithm #
