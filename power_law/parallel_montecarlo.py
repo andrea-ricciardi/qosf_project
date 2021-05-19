@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import logging
 import math
 from operators import UnitaryOperator, SineSquaredOperator
 from qae_inputs import QAEInputs, IntegralInputs
@@ -15,39 +14,84 @@ import warnings
 warnings.filterwarnings("ignore")
 
 def main() -> None:
-    logging.basicConfig(level=logging.WARNING)
-    logging.info("Start program")
+    """
+    Run the MaximumLikelihoodAmplitudeEstimation parallely. Steps:
     
+    (1) The user can change the inputs between 'Start Inputs' and 'End Inputs'.
+    (2) Make the schedule for distributed computing (resource allocation problem).
+    (3) Set up the parallel MLAE algorithm.
+    (4) Make the A operator specific to the problem to solve. Currently only the operator
+        for the integral of (sin(x))^2 is implemented. In order to tackle new problems,
+        the user must derive his/her own operator from operators.UnitaryOperator.
+    (5) Set up the estimation problem through the EstimationProblem Qiskit class.
+    (6) Run the estimation problem.
+    (7) Print the analytical result, the discretized result and the estimation result.
+    
+    """
+    ##############
+    # (1) Inputs #
+    ##############
     """ Start Inputs """
-    n_qubits_algo = 3
+    n_qubits_algo = 3 # number of qubits needed by the algorithm
     qubits_per_qpu = [10, 10, 10]
-    problem = 'sine_squared' # 'sine_squared'
-    evaluation_schedule = power_law_schedule() # power_law_schedule() for power law, None for Suzuki
+    problem = 'sine_squared' # 'sine_squared' for computing the integral of (sin(x))^2
+    evaluation_schedule = None # power_law_schedule() for power law, None for Suzuki
     """ End Inputs """
     
+    # Make inputs for the program
     inputs = QAEInputs(n_qubits_algo, qubits_per_qpu, problem, 
                        evaluation_schedule=evaluation_schedule)
-    # Schedule for distributed computing
+    
+    ##########################################
+    # (2) Schedule for distributed computing #
+    ##########################################
+    # A greedy schedule is a schedule that greedily fills the QPUs with as many qubits
+    # that can possibly fit; when the QPUs cannot fit any more qubits, the execution
+    # of those estimations are moved to the next round.
+    # Other approaches are possible, even though not implemented, such as constraint programming.
     greedy_schedule = GreedySchedule(inputs.algo, inputs.hardware, False)
     greedy_schedule.make_schedule()
-    logging.info("Schedule is {}".format(greedy_schedule.schedule))
+    # TODO greedy schedule figure it out
+    # greedy_schedule.schedule is a dictionary having:
+    # - rounds as keys
+    # - list of tuples ()
     
-    # SineSquaredOperator
-    problem_operator = make_operator(inputs.integral, inputs.algo.n_qubits)
-    
-    mlae = ParallelMaximumLikelihoodAmplitudeEstimation(
+    ##########################################
+    # (3) Set up the parallel MLAE algorithm #
+    ##########################################
+    # PMLAE needs, as well as an evaluation schedule, a parallelization schedule
+    # and a ParallelQuantumInstance
+    pmlae = ParallelMaximumLikelihoodAmplitudeEstimation(
         evaluation_schedule=inputs.algo.evaluation_schedule,
-        schedule=greedy_schedule,
+        parallelization_schedule=greedy_schedule,
         quantum_instance=ParallelQuantumInstance(Aer.get_backend('qasm_simulator'))
         )
+    
+    ##################
+    # (4) Operator A #
+    ##################
+    # Make the A operator specific to the problem.
+    # Currently only SineSquaredOperator is implemented.
+    problem_operator = make_operator(inputs.integral, inputs.algo.n_qubits)
+    
+    #####################################
+    # (5) Set up the estimation problem #
+    #####################################
     problem = EstimationProblem(
         state_preparation=problem_operator.prepare_state(),
-        objective_qubits=[n_qubits_algo + 1],
+        objective_qubits=[n_qubits_algo + 1], # include the ancilla qubit
         grover_operator=problem_operator.make_grover()
         )
     
-    result = mlae.estimate(problem)
-    # Returns the result of equation (23) in Suzuki
+    ##################################
+    # (6) Run the estimation problem #
+    ##################################
+    result = pmlae.estimate(problem)
+    
+    #####################
+    # (7) Print results #
+    #####################
+    # Print the result of equation (23) in Suzuki (discretized result) and the analytical result
     approximate_integral(n_qubits_algo, inputs.integral.param['upper_limit'])
     print("Estimation result: {}".format(result.estimation))
     

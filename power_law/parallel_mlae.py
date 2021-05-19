@@ -14,21 +14,26 @@ from parallel_quantum_instance import ParallelQuantumInstance
 MINIMIZER = Callable[[Callable[[float], float], List[Tuple[float, float]]], float]
 
 class ParallelMaximumLikelihoodAmplitudeEstimation(MaximumLikelihoodAmplitudeEstimation):
+    """
+    Represents the MLAE method that can be run parallely given a distributed schedule.
+    It derives from the Qiskit MaximumLikelihoodAmplitudeEstimation class.
+    
+    """
     
     def __init__(self, evaluation_schedule: Union[List[int], int],
-                 schedule: Schedule,
+                 parallelization_schedule: Schedule,
                  minimizer: Optional[MINIMIZER] = None,
                  quantum_instance: Optional[ParallelQuantumInstance] = None) -> None:
         super().__init__(evaluation_schedule, minimizer, quantum_instance)
-        self._schedule = schedule
+        self._parallelization_schedule = parallelization_schedule
         
     @property
     def schedule(self):
-        return self._schedule
+        return self._parallelization_schedule
     
     @schedule.setter
     def schedule(self, schedule: Schedule):
-        self._schedule = schedule
+        self._parallelization_schedule = schedule
         
     def estimate(self, estimation_problem: EstimationProblem
                  ) -> MaximumLikelihoodAmplitudeEstimationResult:
@@ -45,7 +50,7 @@ class ParallelMaximumLikelihoodAmplitudeEstimation(MaximumLikelihoodAmplitudeEst
         if self._quantum_instance.is_statevector:
             # run circuit on statevector simulator
             circuits = self.construct_circuits(estimation_problem, measurement=False)
-            ret = self._quantum_instance.execute(circuits, parallel_schedule=self._schedule)
+            ret = self._quantum_instance.execute(circuits, parallel_schedule=self._parallelization_schedule)
 
             # get statevectors and construct MLE input
             statevectors = [np.asarray(ret.get_statevector(circuit)) for circuit in circuits]
@@ -57,7 +62,7 @@ class ParallelMaximumLikelihoodAmplitudeEstimation(MaximumLikelihoodAmplitudeEst
         else:
             # run circuit on QASM simulator
             circuits = self.construct_circuits(estimation_problem, measurement=True)
-            ret = self._quantum_instance.execute(circuits, parallel_schedule=self._schedule)
+            ret = self._quantum_instance.execute(circuits, parallel_schedule=self._parallelization_schedule)
 
             # get counts and construct MLE input
             result.circuit_results = [ret.get_counts(circuit) for circuit in circuits]
