@@ -10,6 +10,9 @@ from parallel_mlae import ParallelMaximumLikelihoodAmplitudeEstimation
 from parallel_quantum_instance import ParallelQuantumInstance
 from schedule import GreedySchedule
 from typing import List
+import warnings
+
+warnings.filterwarnings("ignore")
 
 def main() -> None:
     logging.basicConfig(level=logging.WARNING)
@@ -18,8 +21,8 @@ def main() -> None:
     """ Start Inputs """
     n_qubits_algo = 3
     qubits_per_qpu = [10, 10, 10]
-    problem = 'sine_squared'
-    evaluation_schedule = None # power_law_schedule() for power law, None for Suzuki
+    problem = 'sine_squared' # 'sine_squared'
+    evaluation_schedule = power_law_schedule() # power_law_schedule() for power law, None for Suzuki
     """ End Inputs """
     
     inputs = QAEInputs(n_qubits_algo, qubits_per_qpu, problem, 
