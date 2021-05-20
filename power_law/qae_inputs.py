@@ -8,6 +8,8 @@ class QAEInputs:
     def __init__(self, n_qubits_algo: int, qubits_per_qpu: List[int],
                  problem: str, param: Dict[str, float] = {},
                  evaluation_schedule: Optional[List[int]] = None) -> None:
+        if n_qubits_algo < 2:
+            raise ValueError("At least two qubits are needed for the operator.")
         self.algo = QAEAlgoInputs(n_qubits_algo, 
                                   evaluation_schedule=evaluation_schedule)
         self.hardware = HardwareInputs(qubits_per_qpu)
@@ -31,7 +33,6 @@ class QAEAlgoInputs:
 
         """
         self.n_qubits = n_qubits
-        self.oracle_size = 2 * n_qubits - 1 # number of qubits needed to query the oracle
         if shots_list is None:
             if evaluation_schedule is None:
                 self.shots_list = [100, 100, 100, 100, 100, 100, 100]

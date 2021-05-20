@@ -14,6 +14,7 @@ class Schedule:
     
     def __init__(self, algo_inputs: QAEAlgoInputs, 
                  hardware_inputs: HardwareInputs, 
+                 oracle_size: int,
                  allow_distributed: bool) -> None:
         """
         Parameters
@@ -27,6 +28,7 @@ class Schedule:
 
         """
         self.algo_inputs = algo_inputs
+        self._oracle_size = oracle_size
         self.hardware_inputs = hardware_inputs
         self.allow_distributed = allow_distributed
         self._schedule: Dict[int, List[Tuple[int, List]]] = {}
@@ -65,7 +67,7 @@ class GreedySchedule(Schedule):
         Recursively makes the schedule.
         
         """
-        if num_paulis == 0 or self.algo_inputs.oracle_size == 0:
+        if num_paulis == 0 or self._oracle_size == 0:
             return
         
         qpus = self.hardware_inputs.qubits_per_qpu
@@ -88,9 +90,9 @@ class GreedySchedule(Schedule):
                 possible_qpus = modified_qpus[:j+1]
                 curAllocation = self.__fill_allocation(possible_qpus)
                 
-                if sum(curAllocation) >= self.algo_inputs.oracle_size:
+                if sum(curAllocation) >= self._oracle_size:
                     # An allocation is possible
-                    remaining_bits = self.algo_inputs.oracle_size
+                    remaining_bits = self._oracle_size
                     for idx, bits_index in enumerate(possible_qpus):
                         t = min(remaining_bits, curAllocation[bits_index[1]])
                         distribution[bits_index[1]] += t
@@ -151,7 +153,7 @@ class GreedySchedule(Schedule):
         for idx in range(len(modified_qpus)):
             possible_qpus = modified_qpus[:idx+1]
             curAllocation = self.__fill_allocation(possible_qpus)
-            if sum(curAllocation) >= self.algo_inputs.oracle_size and\
+            if sum(curAllocation) >= self._oracle_size and\
                 (self.allow_distributed or is_not_distributed_computing(curAllocation)):
                 return False
         

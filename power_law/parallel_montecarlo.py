@@ -18,45 +18,74 @@ def main() -> None:
     Run the MaximumLikelihoodAmplitudeEstimation parallely. Steps:
     
     (1) The user can change the inputs between 'Start Inputs' and 'End Inputs'.
-    (2) Make the schedule for distributed computing (resource allocation problem).
-    (3) Set up the parallel MLAE algorithm.
-    (4) Make the A operator specific to the problem to solve. Currently only the operator
-        for the integral of (sin(x))^2 is implemented. In order to tackle new problems,
-        the user must derive his/her own operator from operators.UnitaryOperator.
-    (5) Set up the estimation problem through the EstimationProblem Qiskit class.
+    (2) Make the A & Q operators specific to the problem to estimate. 
+        Currently only the operator for the integral of (sin(x))^2 is implemented. 
+        In order to tackle new problems, the user must derive his/her own 
+        operator from operators.UnitaryOperator.
+    (3) Set up the estimation problem through the EstimationProblem Qiskit class.
+    (4) Make the schedule for parallel computing (resource allocation problem).
+        The schedule does not allow for distributed computing, for that we will
+        need to use the Interlin-q framework.
+    (5) Set up the parallel MLAE algorithm.
     (6) Run the estimation problem.
-    (7) Print the analytical result, the discretized result and the estimation result.
+    (7) Print the analytical result (in the case of the sine squared integral), 
+        the discretized result (equation (23) in Suzuki paper) and the 
+        estimation result, which estimates the discretized result.
     
     """
     ##############
     # (1) Inputs #
     ##############
     """ Start Inputs """
-    n_qubits_algo = 4 # number of qubits needed to run the circuit
+    # Number of qubits the operator A acts on ("n" in the Suzuki paper). 
+    # Notice that the measurement qubit is not included here.
+    # By using more qubits, we can discretized (approximate) the integral better
+    n_qubits_input = 1 # TODO works until 5 included
     qubits_per_qpu = [10, 10, 10]
     problem = 'sine_squared' # 'sine_squared' for computing the integral of (sin(x))^2
-    evaluation_schedule = None # power_law_schedule() for power law, None for Suzuki
+    evaluation_schedule = power_law_schedule() # power_law_schedule() for power law, None for Suzuki
     """ End Inputs """
     
     # Make inputs for the program
-    inputs = QAEInputs(n_qubits_algo, qubits_per_qpu, problem, 
+    inputs = QAEInputs(n_qubits_input, qubits_per_qpu, problem, 
                        evaluation_schedule=evaluation_schedule)
     
+    #######################
+    # (2) Operators A & Q #
+    #######################
+    # Make the A and Q operators specific to the problem to estimate.
+    # Currently only SineSquaredOperator is implemented.
+    problem_operator = make_operator(inputs.integral, inputs.algo.n_qubits)
+    state_preparation = problem_operator.prepare_state() # P x R operator
+    grover_operator = problem_operator.make_grover() # Q operator
+    
+    #####################################
+    # (3) Set up the estimation problem #
+    #####################################
+    problem = EstimationProblem(
+        state_preparation=state_preparation,
+        objective_qubits=problem_operator.oracle_size - 1, # -1 as it's the index of the qubit to measure
+        grover_operator=grover_operator
+    )
+    
     ##########################################
-    # (2) Schedule for distributed computing #
+    # (4) Schedule for distributed computing #
     ##########################################
     # A greedy schedule is a schedule that greedily fills the QPUs with as many qubits
     # that can possibly fit; when the QPUs cannot fit any more qubits, the execution
     # of those estimations are moved to the next round.
     # Other approaches are possible, even though not implemented, such as constraint programming.
-    greedy_schedule = GreedySchedule(inputs.algo, inputs.hardware, False)
+    greedy_schedule = GreedySchedule(
+        inputs.algo, inputs.hardware, problem_operator.oracle_size, 
+        allow_distributed=False
+    )
     greedy_schedule.make_schedule()
     # greedy_schedule.schedule is a dictionary having:
     # - rounds as keys
     # - list of tuples (circuit_id, [qubits_qpu1, .., qubits_qpuN])
     
     ##########################################
-    # (3) Set up the parallel MLAE algorithm #
+    # (5) Set up the parallel MLAE algorithm #
     ##########################################
     # PMLAE needs, as well as an evaluation schedule, a parallelization schedule
     # and a ParallelQuantumInstance
@@ -64,22 +93,6 @@ def main() -> None:
         evaluation_schedule=inputs.algo.evaluation_schedule,
         parallelization_schedule=greedy_schedule,
         quantum_instance=ParallelQuantumInstance(Aer.get_backend('qasm_simulator'))
-        )
-    
-    ##################
-    # (4) Operator A #
-    ##################
-    # Make the A operator specific to the problem.
-    # Currently only SineSquaredOperator is implemented.
-    problem_operator = make_operator(inputs.integral, inputs.algo.n_qubits)
-    
-    #####################################
-    # (5) Set up the estimation problem #
-    #####################################
-    problem = EstimationProblem(
-        state_preparation=problem_operator.prepare_state(),
-        objective_qubits=[n_qubits_algo + 1], # include the ancilla qubit
-        grover_operator=problem_operator.make_grover()
         )
     
     ##################################
@@ -90,8 +103,8 @@ def main() -> None:
     #####################
     # (7) Print results #
     #####################
-    # Print the result of equation (23) in Suzuki (discretized result) and the analytical result
-    approximate_integral(n_qubits_algo, inputs.integral.param['upper_limit'])
+    print("Analytical result: {}".format(problem_operator.analytical_result()))
+    print("Discretized result: {}".format(problem_operator.discretized_result()))
     print("Estimation result: {}".format(result.estimation))
     
 def make_operator(integral_inputs: IntegralInputs, n_qubits: int) -> UnitaryOperator:
@@ -118,29 +131,6 @@ def make_operator(integral_inputs: IntegralInputs, n_qubits: int) -> UnitaryOper
         return SineSquaredOperator(n_qubits, integral_inputs.param)
     else:
         raise ValueError("Operator for problem {} not implemented".format(integral_inputs.problem))
-    
-def approximate_integral(nbit: int, b_max: float) -> None:
-    """
-    Approximate the integral to a discretized result. By using more qubits,
-    we can approximate the integral better
-
-    Parameters
-    ----------
-    nbit : int
-        Number of qubits.
-    b_max : float
-        Upper limit of the integral.
-
-    """
-    analyticResult = (b_max / 2.0 - math.sin(2*b_max) / 4.0) / b_max
-    print("Analytical result: {}".format(analyticResult))
-    
-    ndiv = 2 ** nbit # number of discretization
-    discretizedResult = 0.0
-    for i in range(ndiv):
-        discretizedResult += math.sin(b_max / ndiv * (i + 0.5))**2
-    discretizedResult = discretizedResult / ndiv
-    print("Discretized Result: {}".format(discretizedResult))
     
 def power_law_schedule(eps_precision: float = 0.01,
                        beta: float = 0.455) -> List[int]:
