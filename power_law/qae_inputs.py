@@ -14,6 +14,13 @@ class QAEInputs:
                                   evaluation_schedule=evaluation_schedule)
         self.hardware = HardwareInputs(qubits_per_qpu)
         self.integral = IntegralInputs(problem, param)
+        
+    def print_inputs(self) -> None:
+        print("### Inputs ###")
+        self.algo.print_inputs()
+        self.hardware.print_inputs()
+        self.integral.print_inputs()
+        print("")
     
 class QAEAlgoInputs:
     
@@ -48,6 +55,10 @@ class QAEAlgoInputs:
         
         assert len(self.shots_list) == len(self.evaluation_schedule) 
         
+    def print_inputs(self) -> None:
+        print("# Algorithm Inputs #")
+        print("N qubits: {}, N Pauli operators: {}".format(self.n_qubits, self.num_paulis))
+        
 class HardwareInputs:
     
     def __init__(self, qubits_per_qpu: List[int]) -> None:
@@ -56,6 +67,10 @@ class HardwareInputs:
     @property
     def num_qpus(self) -> int:
         return len(self.qubits_per_qpu)
+    
+    def print_inputs(self) -> None:
+        print("# Hardware Inputs #")
+        print("N QPUs: {}, qubits per qpu: {}".format(self.num_qpus, self.qubits_per_qpu))
         
 class IntegralInputs:
     
@@ -69,5 +84,9 @@ class IntegralInputs:
                 self.param['upper_limit'] = math.pi / 5.0
         else:
             raise ValueError("Problem {} not implemented".format(problem_tag))
+            
+    def print_inputs(self) -> None:
+        print("# Integral Inputs #")
+        print("Problem: {}, b_max: {}".format(self.problem, self.param['upper_limit']))
             
     

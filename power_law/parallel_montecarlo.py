@@ -40,7 +40,7 @@ def main() -> None:
     # Number of qubits the operator A acts on ("n" in the Suzuki paper). 
     # Notice that the measurement qubit is not included here.
     # By using more qubits, we can discretized (approximate) the integral better
-    n_qubits_input = 1 # TODO works until 5 included
+    n_qubits_input = 3
     qubits_per_qpu = [10, 10, 10]
     problem = 'sine_squared' # 'sine_squared' for computing the integral of (sin(x))^2
     evaluation_schedule = power_law_schedule() # power_law_schedule() for power law, None for Suzuki
@@ -49,6 +49,7 @@ def main() -> None:
     # Make inputs for the program
     inputs = QAEInputs(n_qubits_input, qubits_per_qpu, problem, 
                        evaluation_schedule=evaluation_schedule)
+    inputs.print_inputs()
     
     #######################
     # (2) Operators A & Q #
@@ -80,6 +81,10 @@ def main() -> None:
         allow_distributed=False
     )
     greedy_schedule.make_schedule()
+    if len(greedy_schedule.schedule) == 0:
+        raise SystemExit("Hardware capabilities are too small to handle the size of the oracle.")
+    else:
+        greedy_schedule.print_schedule()
     # greedy_schedule.schedule is a dictionary having:
     # - rounds as keys
     # - list of tuples (circuit_id, [qubits_qpu1, .., qubits_qpuN])
@@ -103,6 +108,7 @@ def main() -> None:
     #####################
     # (7) Print results #
     #####################
+    print("### Results ###")
     print("Analytical result: {}".format(problem_operator.analytical_result()))
     print("Discretized result: {}".format(problem_operator.discretized_result()))
     print("Estimation result: {}".format(result.estimation))

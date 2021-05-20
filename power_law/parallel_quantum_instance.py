@@ -320,6 +320,8 @@ def run_qobj_parallel(qobj: QasmQobj,
 
     # If result was not successful then raise an exception with either the status msg or
     # extra information if this was an Aer partial result return
+    if result is None:
+        raise QiskitError('Circuit execution failed')
     if not result.success:
         msg = result.status
         if result.status == 'PARTIAL COMPLETED':

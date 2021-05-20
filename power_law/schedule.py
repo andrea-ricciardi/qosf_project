@@ -44,6 +44,13 @@ class Schedule:
     def schedule(self) -> Dict[int, List[Tuple[int, List[int]]]]:
         return self._schedule
     
+    def print_schedule(self) -> None:
+        print("### Schedule for parallelization ###")
+        for round in self.schedule:
+            print("# Round {} #".format(round))
+            print(self.schedule[round])
+        print("")
+    
 class GreedySchedule(Schedule):
     """    
     Represents the schedule obtained through a greedy algorithm.
