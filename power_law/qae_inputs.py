@@ -51,13 +51,15 @@ class QAEAlgoInputs:
             self.evaluation_schedule = [0, 1, 2, 4, 8, 16, 32]
         else:
             self.evaluation_schedule = evaluation_schedule
-        self.num_paulis = len(self.evaluation_schedule)
+        self.num_likelihoods = len(self.evaluation_schedule)
         
         assert len(self.shots_list) == len(self.evaluation_schedule) 
         
     def print_inputs(self) -> None:
         print("# Algorithm Inputs #")
-        print("N qubits: {}, N Pauli operators: {}".format(self.n_qubits, self.num_paulis))
+        print("N qubits: {}, N likelihood functions: {}".format(
+            self.n_qubits, self.num_likelihoods)
+        )
         
 class HardwareInputs:
     

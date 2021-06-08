@@ -7,7 +7,7 @@ from typing import Dict, List, Tuple
 
 class Schedule:
     """
-    Represents an Ansatz distribution schedule. One can run over the 
+    Represents a distribution schedule. One can run over the 
     distributed system to obtain an estimate to the desired expectation value.
     
     """
@@ -54,9 +54,9 @@ class Schedule:
 class GreedySchedule(Schedule):
     """    
     Represents the schedule obtained through a greedy algorithm.
-    The QPUs are greedily filled with as many Ansatz states that can possibly
+    The QPUs are greedily filled with as many states that can possibly
     fit; the remaining needed qubits are split across the QPUs. When the QPUs
-    cannot fit any more Ansatze, the execution of those estimations are moved
+    cannot fit any more states, the execution of those estimations are moved
     to the next round.
     
     """
@@ -66,15 +66,15 @@ class GreedySchedule(Schedule):
         Prepare the greedy schedule and saves it into self.schedule.
 
         """
-        self.__make_schedule(self.algo_inputs.num_paulis)
+        self.__make_schedule(self.algo_inputs.num_likelihoods)
         
-    def __make_schedule(self, num_paulis: int,
+    def __make_schedule(self, num_likelihoods: int,
                         round: int = 1):
         """
         Recursively makes the schedule.
         
         """
-        if num_paulis == 0 or self._oracle_size == 0:
+        if num_likelihoods == 0 or self._oracle_size == 0:
             return
         
         qpus = self.hardware_inputs.qubits_per_qpu
@@ -83,11 +83,11 @@ class GreedySchedule(Schedule):
         self._schedule[round] = []
         couldNotFit = 0
         
-        for i in range(num_paulis):
+        for i in range(num_likelihoods):
             modified_qpus.sort(key=lambda q: q[0], reverse=True)
             if len(modified_qpus) == 0 or self.__does_not_fit(deepcopy(modified_qpus)):
                 if round == 1 and i == 0:
-                    # The Ansatz does not fit, the problem cannot be solved
+                    # The state does not fit, the problem cannot be solved
                     return
                 couldNotFit += 1
                 continue
@@ -136,7 +136,7 @@ class GreedySchedule(Schedule):
     
     def __does_not_fit(self, modified_qpus: List[List[int]]) -> bool:
         """
-        Returns True if the Ansatz cannot fit in the distributed QPU
+        Returns True if the state cannot fit in the distributed QPU.
     
         Parameters
         ----------
