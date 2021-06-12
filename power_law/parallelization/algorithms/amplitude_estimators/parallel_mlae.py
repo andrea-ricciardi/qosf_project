@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import sys # TODO ugly
+import sys  # TODO ugly
 sys.path.append("../../")
 
 import numpy as np
@@ -15,6 +15,7 @@ from utils.parallel_quantum_instance import ParallelQuantumInstance
 
 
 MINIMIZER = Callable[[Callable[[float], float], List[Tuple[float, float]]], float]
+
 
 class ParallelMaximumLikelihoodAmplitudeEstimation(MaximumLikelihoodAmplitudeEstimation):
     """
@@ -97,7 +98,8 @@ class ParallelMaximumLikelihoodAmplitudeEstimation(MaximumLikelihoodAmplitudeEst
                                                      for value in confidence_interval)
 
         return result
-        
+
+
 def _compute_fisher_information(result: 'MaximumLikelihoodAmplitudeEstimationResult',
                                 num_sum_terms: Optional[int] = None,
                                 observed: bool = False) -> float:
@@ -150,4 +152,3 @@ def _compute_fisher_information(result: 'MaximumLikelihoodAmplitudeEstimationRes
         fisher_information /= a * (1 - a)
 
     return fisher_information
-        

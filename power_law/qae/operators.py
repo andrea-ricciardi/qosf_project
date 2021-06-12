@@ -5,10 +5,11 @@ import numpy as np
 from qiskit import ClassicalRegister, QuantumRegister, QuantumCircuit
 from typing import Dict, Tuple
 
+
 class UnitaryOperator:
     """
     Represents the A operator.
-    
+
     """
     def __init__(self, n_qubits: int, param: Dict[str, float]) -> None:
         """
@@ -52,7 +53,7 @@ class UnitaryOperator:
         return
     
     def apply_reflection(self, qc: QuantumCircuit, qx: QuantumRegister,
-                         qx_measure: QuantumRegister, 
+                         qx_measure: QuantumRegister,
                          qx_ancilla: QuantumRegister) -> None:
         """
         Apply reflection operator (I - 2|0><0|) to qc
@@ -91,7 +92,7 @@ class UnitaryOperator:
                 qc.ccx(qx[i + 2], qx_ancilla[i], qx_ancilla[i + 1])
             qc.ccx(qx[0], qx[1], qx_ancilla[0])
             
-    def _prepare_circuit(self) -> Tuple[QuantumCircuit, QuantumRegister, 
+    def _prepare_circuit(self) -> Tuple[QuantumCircuit, QuantumRegister,
                                         QuantumRegister, QuantumRegister]:
         qx = QuantumRegister(self.n_qubits)
         qx_measure = QuantumRegister(1)
@@ -170,4 +171,3 @@ class UnitaryOperator:
         """
         print("Discretized result not available. Return NaN")
         return np.nan
-    

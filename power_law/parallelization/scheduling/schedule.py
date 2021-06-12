@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import sys # TODO ugly
+import sys  # TODO ugly
 sys.path.append("../../")
 sys.path.append("../../qae/")
 
@@ -9,14 +9,15 @@ from copy import deepcopy
 from hardware_config import HardwareConfig
 from typing import Dict, List, Tuple
 
+
 class Schedule:
     """
-    Represents a distribution schedule. One can run over the 
+    Represents a distribution schedule. One can run over the
     distributed system to obtain an estimate to the desired expectation value.
     
     """
     
-    def __init__(self, num_likelihoods: int, 
+    def __init__(self, num_likelihoods: int,
                  hardware_config: HardwareConfig, 
                  oracle_size: int,
                  allow_distributed: bool) -> None:
@@ -54,7 +55,8 @@ class Schedule:
             print("# Round {} #".format(round))
             print(self.schedule[round])
         print("")
-    
+
+
 class GreedySchedule(Schedule):
     """    
     Represents the schedule obtained through a greedy algorithm.

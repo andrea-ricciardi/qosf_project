@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import sys # TODO ugly
+import sys  # TODO ugly
 sys.path.append("../")
 
 import copy
@@ -23,11 +23,12 @@ logger = logging.getLogger(__name__)
 
 MAX_CIRCUITS_PER_JOB = run_circuits.MAX_CIRCUITS_PER_JOB
 
+
 class ParallelQuantumInstance(QuantumInstance):
     """
     Represents a QuantumInstance that can be executed parallely by providing
     a distributed computing schedule.
-    
+
     """
     
     def execute(self,
@@ -104,13 +105,13 @@ class ParallelQuantumInstance(QuantumInstance):
                                                             self._compile_config,
                                                             temp_run_config)
                 if use_different_shots or is_aer_qasm(self._backend):
-                    cals_result = run_qobj_parallel(cals_qobj, parallel_schedule, 
+                    cals_result = run_qobj_parallel(cals_qobj, parallel_schedule,
                                                     self._backend, self._qjob_config,
                                                     self._backend_options,
                                                     self._noise_config,
                                                     self._skip_qobj_validation, self._job_callback)
                     self._time_taken += cals_result.time_taken
-                    result = run_qobj_parallel(qobj, parallel_schedule, self._backend, 
+                    result = run_qobj_parallel(qobj, parallel_schedule, self._backend,
                                                self._qjob_config,
                                                self._backend_options, self._noise_config,
                                                self._skip_qobj_validation, self._job_callback)
@@ -118,7 +119,7 @@ class ParallelQuantumInstance(QuantumInstance):
                 else:
                     # insert the calibration circuit into main qobj if the shots are the same
                     qobj.experiments[0:0] = cals_qobj.experiments
-                    result = run_qobj_parallel(qobj, parallel_schedule, self._backend, 
+                    result = run_qobj_parallel(qobj, parallel_schedule, self._backend,
                                                self._qjob_config,
                                                self._backend_options, self._noise_config,
                                                self._skip_qobj_validation, self._job_callback)
@@ -134,7 +135,7 @@ class ParallelQuantumInstance(QuantumInstance):
                 self._meas_error_mitigation_fitters[qubit_index_str] = \
                     (meas_error_mitigation_fitter, time.time())
             else:
-                result = run_qobj_parallel(qobj, parallel_schedule, self._backend, 
+                result = run_qobj_parallel(qobj, parallel_schedule, self._backend,
                                            self._qjob_config,
                                            self._backend_options, self._noise_config,
                                            self._skip_qobj_validation, self._job_callback)
@@ -171,7 +172,8 @@ class ParallelQuantumInstance(QuantumInstance):
             self._circuit_summary = False
 
         return result
-    
+
+
 def run_qobj_parallel(qobj: QasmQobj,
                       parallel_schedule: Schedule,
                       backend: Union[Backend, BaseBackend],
@@ -240,13 +242,10 @@ def run_qobj_parallel(qobj: QasmQobj,
         if len(these_jobs_and_job_ids) > 0:
             jobs.append(these_jobs_and_job_ids[0][0])
             job_ids.append(these_jobs_and_job_ids[0][1])
-    
-    
-    
-    
+
     # for qob in qobjs:
     #     job, job_id = run_circuits._safe_submit_qobj(qob, backend,
-    #                                                  backend_options, noise_config, 
+    #                                                  backend_options, noise_config,
     #                                                  skip_qobj_validation)
     #     job_ids.append(job_id)
     #     jobs.append(job)
@@ -340,7 +339,3 @@ def run_qobj_parallel(qobj: QasmQobj,
         setattr(result, 'time_taken', 0.)
 
     return result
-    
-    
-    
-    
