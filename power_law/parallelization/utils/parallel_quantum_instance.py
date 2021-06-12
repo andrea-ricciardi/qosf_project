@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import sys  # TODO ugly
-sys.path.append("../")
-
 import copy
 import logging
+import time
+from typing import Callable, Dict, Optional, Union
+
 from qiskit.exceptions import QiskitError
 from qiskit.providers import Backend, BaseBackend, JobStatus
 from qiskit.providers.jobstatus import JOB_FINAL_STATES
@@ -12,12 +12,11 @@ from qiskit.qobj import QasmQobj
 from qiskit.result import Result
 from qiskit.tools.parallel import parallel_map
 from qiskit.utils import QuantumInstance
+from qiskit.utils import run_circuits
 from qiskit.utils.backend_utils import (is_aer_qasm, is_simulator_backend,
                                         is_local_backend)
-from qiskit.utils import run_circuits
-from scheduling.schedule import Schedule
-import time
-from typing import Callable, Dict, Optional, Union
+
+from power_law.parallelization import Schedule
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +29,7 @@ class ParallelQuantumInstance(QuantumInstance):
     a distributed computing schedule.
 
     """
-    
+
     def execute(self,
                 circuits,
                 parallel_schedule: Schedule,
@@ -46,7 +45,7 @@ class ParallelQuantumInstance(QuantumInstance):
 
         Returns:
             Result: result object
-            
+
         """
 
         from qiskit.utils.measurement_error_mitigation import \
@@ -230,7 +229,7 @@ def run_qobj_parallel(qobj: QasmQobj,
     qobjs = run_circuits._split_qobj_to_qobjs(qobj, max_circuits_per_job)
     jobs = []
     job_ids = []
-    
+
     schedule = parallel_schedule.schedule.copy()
     for round in schedule:
         num_processes = len(schedule[round])

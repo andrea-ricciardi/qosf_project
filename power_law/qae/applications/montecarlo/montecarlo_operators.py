@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
-import sys  # TODO ugly
-sys.path.append("../../")
-
 import math
-from operators import UnitaryOperator
+from power_law.qae import UnitaryOperator
 from qiskit import QuantumRegister, QuantumCircuit
 from typing import Dict
 

@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import sys  # TODO ugly
-sys.path.append("../../")
-sys.path.append("../../../parallelization/")
-
 import math
+
 from montecarlo_operators import SineSquaredOperator
-from operators import UnitaryOperator
 from montecarlo_config import QAEMonteCarloConfig, IntegralConfig
+
 from qiskit import Aer
 from qiskit.algorithms.amplitude_estimators import EstimationProblem
-from algorithms.amplitude_estimators.parallel_mlae import ParallelMaximumLikelihoodAmplitudeEstimation
-from utils.parallel_quantum_instance import ParallelQuantumInstance
-from scheduling.schedule import GreedySchedule
+
+from power_law.qae import UnitaryOperator
+from power_law.parallelization import ParallelMaximumLikelihoodAmplitudeEstimation
+from power_law.parallelization import ParallelQuantumInstance
+from power_law.parallelization import GreedySchedule
+
 from typing import List
 import warnings
 

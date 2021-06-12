@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import sys  # TODO ugly
-sys.path.append("../../")
-sys.path.append("../../../")
 
-from hardware_config import HardwareConfig
+from power_law.qae import HardwareConfig
+from power_law.qae import QAEAlgoConfig
+
 import math
-from qae_config import QAEAlgoConfig
 from typing import Dict, List, Optional
 
 

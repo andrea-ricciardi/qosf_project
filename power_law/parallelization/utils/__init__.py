@@ -1,0 +1,1 @@
+from .parallel_quantum_instance import ParallelQuantumInstance

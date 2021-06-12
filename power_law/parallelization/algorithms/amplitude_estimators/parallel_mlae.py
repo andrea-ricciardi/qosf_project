@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import sys  # TODO ugly
-sys.path.append("../../")
+from typing import Callable, List, Optional, Tuple, Union
 
 import numpy as np
 from qiskit.algorithms.amplitude_estimators import EstimationProblem
 from qiskit.algorithms.amplitude_estimators import MaximumLikelihoodAmplitudeEstimation
 from qiskit.algorithms.amplitude_estimators import MaximumLikelihoodAmplitudeEstimationResult
 from qiskit.algorithms.exceptions import AlgorithmError
-from scheduling.schedule import Schedule
-from typing import Callable, List, Optional, Tuple, Union
 
-from utils.parallel_quantum_instance import ParallelQuantumInstance
-
+from power_law.parallelization import ParallelQuantumInstance
+from power_law.parallelization import Schedule
 
 MINIMIZER = Callable[[Callable[[float], float], List[Tuple[float, float]]], float]
 
