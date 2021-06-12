@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import sys # TODO ugly
+sys.path.append("../../")
+sys.path.append("../../../parallelization/")
+
 import math
-from operators import UnitaryOperator, SineSquaredOperator
-from qae_inputs import QAEInputs, IntegralInputs
+from montecarlo_operators import SineSquaredOperator
+from operators import UnitaryOperator
+from montecarlo_config import QAEMonteCarloConfig, IntegralConfig
 from qiskit import Aer
 from qiskit.algorithms.amplitude_estimators import EstimationProblem
-from parallel_mlae import ParallelMaximumLikelihoodAmplitudeEstimation
-from parallel_quantum_instance import ParallelQuantumInstance
-from schedule import GreedySchedule
+from algorithms.amplitude_estimators.parallel_mlae import ParallelMaximumLikelihoodAmplitudeEstimation
+from utils.parallel_quantum_instance import ParallelQuantumInstance
+from scheduling.schedule import GreedySchedule
 from typing import List
 import warnings
 
@@ -46,17 +51,17 @@ def main() -> None:
     evaluation_schedule = power_law_schedule() # power_law_schedule() for power law, None for Suzuki
     """ End Inputs """
     
-    # Make inputs for the program
-    inputs = QAEInputs(n_qubits_input, qubits_per_qpu, problem, 
-                       evaluation_schedule=evaluation_schedule)
-    inputs.print_inputs()
+    # Make config for the program
+    config = QAEMonteCarloConfig(n_qubits_input, qubits_per_qpu, problem, 
+                                 evaluation_schedule=evaluation_schedule)
+    config.print_configuration()
     
     #######################
     # (2) Operators A & Q #
     #######################
     # Make the A and Q operators specific to the problem to estimate.
     # Currently only SineSquaredOperator is implemented.
-    problem_operator = make_operator(inputs.integral, inputs.algo.n_qubits)
+    problem_operator = make_operator(config.integral, config.algo.n_qubits)
     state_preparation = problem_operator.prepare_state() # P x R operator
     grover_operator = problem_operator.make_grover() # Q operator
     
@@ -77,7 +82,7 @@ def main() -> None:
     # of those estimations are moved to the next round.
     # Other approaches are possible, even though not implemented, such as constraint programming.
     greedy_schedule = GreedySchedule(
-        inputs.algo, inputs.hardware, problem_operator.oracle_size, 
+        config.algo.num_likelihoods, config.hardware, problem_operator.oracle_size, 
         allow_distributed=False
     )
     greedy_schedule.make_schedule()
@@ -95,7 +100,7 @@ def main() -> None:
     # PMLAE needs, as well as an evaluation schedule, a parallelization schedule
     # and a ParallelQuantumInstance
     pmlae = ParallelMaximumLikelihoodAmplitudeEstimation(
-        evaluation_schedule=inputs.algo.evaluation_schedule,
+        evaluation_schedule=config.algo.evaluation_schedule,
         parallelization_schedule=greedy_schedule,
         quantum_instance=ParallelQuantumInstance(Aer.get_backend('qasm_simulator'))
         )
@@ -113,19 +118,19 @@ def main() -> None:
     print("Discretized result: {}".format(problem_operator.discretized_result()))
     print("Estimation result: {}".format(result.estimation))
     
-def make_operator(integral_inputs: IntegralInputs, n_qubits: int) -> UnitaryOperator:
+def make_operator(integral_config: IntegralConfig, n_qubits: int) -> UnitaryOperator:
     """
     Make problem operator. Only SineSquaredOperator supported so far.
 
     Parameters
     ----------
-    integral_inputs : IntegralInputs
+    integral_config : IntegralConfig
     n_qubits : int
 
     Raises
     ------
     ValueError
-        If integral_inputs.problem is not sine_squared.
+        If integral_config.problem is not sine_squared.
 
     Returns
     -------
@@ -133,10 +138,12 @@ def make_operator(integral_inputs: IntegralInputs, n_qubits: int) -> UnitaryOper
         Problem operator.
 
     """
-    if integral_inputs.problem == 'sine_squared':
-        return SineSquaredOperator(n_qubits, integral_inputs.param)
+    if integral_config.problem == 'sine_squared':
+        return SineSquaredOperator(n_qubits, integral_config.param)
     else:
-        raise ValueError("Operator for problem {} not implemented".format(integral_inputs.problem))
+        raise ValueError("Operator for problem {} not implemented".format(
+            integral_config.problem
+        ))
     
 def power_law_schedule(eps_precision: float = 0.01,
                        beta: float = 0.455) -> List[int]:

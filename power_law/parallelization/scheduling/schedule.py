@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import sys # TODO ugly
+sys.path.append("../../")
+sys.path.append("../../qae/")
+
 import abc
 from copy import deepcopy
-from qae_inputs import HardwareInputs, QAEAlgoInputs
+from hardware_config import HardwareConfig
 from typing import Dict, List, Tuple
 
 class Schedule:
@@ -12,24 +16,24 @@ class Schedule:
     
     """
     
-    def __init__(self, algo_inputs: QAEAlgoInputs, 
-                 hardware_inputs: HardwareInputs, 
+    def __init__(self, num_likelihoods: int, 
+                 hardware_config: HardwareConfig, 
                  oracle_size: int,
                  allow_distributed: bool) -> None:
         """
         Parameters
         ----------
-        algo_inputs : QAEAlgoInputs
-        hardware_inputs : HardwareInputs
+        num_likelihoods : int
+        hardware_config : HardwareConfig
         allow_distributed : bool
             True if distributed computing is allowed, False otherwise.
             Distributed computing requires CCNOT gates for entanglement,
             Qiskit does not currently (easily) support it.
 
         """
-        self.algo_inputs = algo_inputs
+        self.num_likelihoods = num_likelihoods
         self._oracle_size = oracle_size
-        self.hardware_inputs = hardware_inputs
+        self.hardware_config = hardware_config
         self.allow_distributed = allow_distributed
         self._schedule: Dict[int, List[Tuple[int, List]]] = {}
         
@@ -66,7 +70,7 @@ class GreedySchedule(Schedule):
         Prepare the greedy schedule and saves it into self.schedule.
 
         """
-        self.__make_schedule(self.algo_inputs.num_likelihoods)
+        self.__make_schedule(self.num_likelihoods)
         
     def __make_schedule(self, num_likelihoods: int,
                         round: int = 1):
@@ -77,7 +81,7 @@ class GreedySchedule(Schedule):
         if num_likelihoods == 0 or self._oracle_size == 0:
             return
         
-        qpus = self.hardware_inputs.qubits_per_qpu
+        qpus = self.hardware_config.qubits_per_qpu
         
         modified_qpus = [[bits, i] for i, bits in enumerate(qpus)]
         self._schedule[round] = []
@@ -92,7 +96,7 @@ class GreedySchedule(Schedule):
                 couldNotFit += 1
                 continue
             
-            distribution = [0] * self.hardware_inputs.num_qpus
+            distribution = [0] * self.hardware_config.num_qpus
             for j in range(len(modified_qpus)):
                 possible_qpus = modified_qpus[:j+1]
                 curAllocation = self.__fill_allocation(possible_qpus)
@@ -128,7 +132,7 @@ class GreedySchedule(Schedule):
             Allocation of qubits per qpu.
 
         """
-        curAllocation = [0] * self.hardware_inputs.num_qpus
+        curAllocation = [0] * self.hardware_config.num_qpus
         curAllocation[possible_qpus[0][1]] = possible_qpus[0][0]
         for bits_index in possible_qpus[1:]:
             curAllocation[bits_index[1]] += bits_index[0]

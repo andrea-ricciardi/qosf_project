@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import sys # TODO ugly
+sys.path.append("../")
+
 import copy
 import logging
 from qiskit.exceptions import QiskitError
@@ -12,8 +15,7 @@ from qiskit.utils import QuantumInstance
 from qiskit.utils.backend_utils import (is_aer_qasm, is_simulator_backend,
                                         is_local_backend)
 from qiskit.utils import run_circuits
-from schedule import Schedule
-import sys
+from scheduling.schedule import Schedule
 import time
 from typing import Callable, Dict, Optional, Union
 
