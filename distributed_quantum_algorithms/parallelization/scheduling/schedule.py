@@ -13,14 +13,14 @@ class Schedule:
 
     """
 
-    def __init__(self, num_likelihoods: int,
+    def __init__(self, num_circuits: int,
                  hardware_config: HardwareConfig,
                  oracle_size: int,
                  allow_distributed: bool) -> None:
         """
         Parameters
         ----------
-        num_likelihoods : int
+        num_circuits : int
         hardware_config : HardwareConfig
         allow_distributed : bool
             True if distributed computing is allowed, False otherwise.
@@ -28,7 +28,7 @@ class Schedule:
             Qiskit does not currently (easily) support it.
 
         """
-        self.num_likelihoods = num_likelihoods
+        self.num_circuits = num_circuits
         self._oracle_size = oracle_size
         self.hardware_config = hardware_config
         self.allow_distributed = allow_distributed
@@ -68,15 +68,15 @@ class GreedySchedule(Schedule):
         Prepare the greedy schedule and saves it into self.schedule.
 
         """
-        self.__make_schedule(self.num_likelihoods)
+        self.__make_schedule(self.num_circuits)
 
-    def __make_schedule(self, num_likelihoods: int,
+    def __make_schedule(self, num_circuits: int,
                         round: int = 1):
         """
         Recursively makes the schedule.
 
         """
-        if num_likelihoods == 0 or self._oracle_size == 0:
+        if num_circuits == 0 or self._oracle_size == 0:
             return
 
         qpus = self.hardware_config.qubits_per_qpu
@@ -85,7 +85,7 @@ class GreedySchedule(Schedule):
         self._schedule[round] = []
         couldNotFit = 0
 
-        for i in range(num_likelihoods):
+        for i in range(num_circuits):
             modified_qpus.sort(key=lambda q: q[0], reverse=True)
             if len(modified_qpus) == 0 or self.__does_not_fit(deepcopy(modified_qpus)):
                 if round == 1 and i == 0:

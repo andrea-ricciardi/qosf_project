@@ -83,7 +83,7 @@ def main() -> None:
     # of those estimations are moved to the next round.
     # Other approaches are possible, even though not implemented, such as constraint programming.
     greedy_schedule = GreedySchedule(
-        config.algo.num_likelihoods, config.hardware, problem_operator.oracle_size,
+        config.algo.num_circuits, config.hardware, problem_operator.oracle_size,
         allow_distributed=False
     )
     greedy_schedule.make_schedule()
