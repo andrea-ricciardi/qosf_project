@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import copy
 import logging
+import sys
 import time
 from typing import Callable, Dict, Optional, Union
 
@@ -16,7 +17,7 @@ from qiskit.utils import run_circuits
 from qiskit.utils.backend_utils import (is_aer_qasm, is_simulator_backend,
                                         is_local_backend)
 
-from power_law.parallelization import Schedule
+from parallelization.scheduling import Schedule
 
 logger = logging.getLogger(__name__)
 

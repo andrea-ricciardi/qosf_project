@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from power_law.qae import HardwareConfig
-from power_law.qae import QAEAlgoConfig
+from parallelization import HardwareConfig
+from qae import QAEAlgoConfig
 
 import math
 from typing import Dict, List, Optional

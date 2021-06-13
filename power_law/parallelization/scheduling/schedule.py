@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import abc
 from copy import deepcopy
-from power_law.hardware_config import HardwareConfig
+from parallelization import HardwareConfig
 from typing import Dict, List, Tuple
 
 

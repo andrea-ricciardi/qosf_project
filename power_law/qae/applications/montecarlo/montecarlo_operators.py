@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import math
-from power_law.qae import UnitaryOperator
+from qae import UnitaryOperator
 from qiskit import QuantumRegister, QuantumCircuit
 from typing import Dict
 

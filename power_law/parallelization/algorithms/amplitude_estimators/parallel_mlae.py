@@ -8,8 +8,8 @@ from qiskit.algorithms.amplitude_estimators import MaximumLikelihoodAmplitudeEst
 from qiskit.algorithms.amplitude_estimators import MaximumLikelihoodAmplitudeEstimationResult
 from qiskit.algorithms.exceptions import AlgorithmError
 
-from power_law.parallelization import ParallelQuantumInstance
-from power_law.parallelization import Schedule
+from parallelization.utils import ParallelQuantumInstance
+from parallelization.scheduling import Schedule
 
 MINIMIZER = Callable[[Callable[[float], float], List[Tuple[float, float]]], float]
 

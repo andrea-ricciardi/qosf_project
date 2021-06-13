@@ -2,16 +2,16 @@
 # -*- coding: utf-8 -*-
 import math
 
-from montecarlo_operators import SineSquaredOperator
-from montecarlo_config import QAEMonteCarloConfig, IntegralConfig
+from qae.applications.montecarlo.montecarlo_operators import SineSquaredOperator
+from qae.applications.montecarlo.montecarlo_config import QAEMonteCarloConfig, IntegralConfig
 
 from qiskit import Aer
 from qiskit.algorithms.amplitude_estimators import EstimationProblem
 
-from power_law.qae import UnitaryOperator
-from power_law.parallelization import ParallelMaximumLikelihoodAmplitudeEstimation
-from power_law.parallelization import ParallelQuantumInstance
-from power_law.parallelization import GreedySchedule
+from qae import UnitaryOperator
+from parallelization import ParallelMaximumLikelihoodAmplitudeEstimation
+from parallelization import ParallelQuantumInstance
+from parallelization import GreedySchedule
 
 from typing import List
 import warnings
